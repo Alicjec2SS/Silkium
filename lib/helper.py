@@ -5,6 +5,10 @@ from cryptography.hazmat.primitives import serialization
 import json
 import os
 import dns.resolver
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 
 # =========================
@@ -92,51 +96,84 @@ def generate_account():
 # SESSION CHECKER
 # =========================
 def checking_keys_available():
-    session = read_json("session.json")
+    sign_priv = os.getenv("SIGNATURE_PRIVATE_KEY")
+    sign_pub  = os.getenv("SIGNATURE_PUBLIC_KEY")
 
-    if session is None:
-        print("No account found.")
-        ans = input("Create new account? (Y/N): ")
+    enc_priv  = os.getenv("ENCRYPT_PRIVATE_KEY")
+    enc_pub   = os.getenv("ENCRYPT_PUBLIC_KEY")
 
-        if ans.lower() == "y":
-            data = generate_account()
+    # Nếu đã có key trong .env
+    if all([sign_priv, sign_pub, enc_priv, enc_pub]):
+        print("[OK] Existing account loaded from .env")
 
-            print("\n=== SIGNATURE KEYS ===")
-            print("Private:", data["signature"]["private_key"])
-            print("Public :", data["signature"]["public_key"])
-
-            print("\n=== ENCRYPTION KEYS ===")
-            print("Private:", data["encryption"]["private_key"])
-            print("Public :", data["encryption"]["public_key"])
-
-            write_json("session.json", data)
-
-        else:
-            print("Manual import mode")
-
-            sign_priv = input("Signature private key: ")
-            sign_pub = input("Signature public key : ")
-
-            enc_priv = input("Encrypt private key : ")
-            enc_pub = input("Encrypt public key  : ")
-
-            data = {
-                "signature": {
-                    "private_key": sign_priv,
-                    "public_key": sign_pub
-                },
-                "encryption": {
-                    "private_key": enc_priv,
-                    "public_key": enc_pub
-                }
+        data = {
+            "signature": {
+                "private_key": sign_priv,
+                "public_key": sign_pub
+            },
+            "encryption": {
+                "private_key": enc_priv,
+                "public_key": enc_pub
             }
+        }
 
-            write_json("session.json", data)
+        print(json.dumps(data, indent=4))
+        return data
+
+    # Nếu chưa có key
+    print("No account found in .env")
+    ans = input("Create new account? (Y/N): ")
+
+    if ans.lower() == "y":
+        data = generate_account()
+
+        print("\n=== SIGNATURE KEYS ===")
+        print("Private:", data["signature"]["private_key"])
+        print("Public :", data["signature"]["public_key"])
+
+        print("\n=== ENCRYPTION KEYS ===")
+        print("Private:", data["encryption"]["private_key"])
+        print("Public :", data["encryption"]["public_key"])
+
+        # Lưu ra .env
+        with open(".env", "w", encoding="utf-8") as f:
+            f.write(f'SIGNATURE_PRIVATE_KEY={data["signature"]["private_key"]}\n')
+            f.write(f'SIGNATURE_PUBLIC_KEY={data["signature"]["public_key"]}\n')
+            f.write(f'ENCRYPT_PRIVATE_KEY={data["encryption"]["private_key"]}\n')
+            f.write(f'ENCRYPT_PUBLIC_KEY={data["encryption"]["public_key"]}\n')
+
+        print("\n[OK] Keys saved to .env")
+        return data
 
     else:
-        print("[OK] Existing account loaded.")
-        print(json.dumps(session, indent=4))
+        print("Manual import mode")
 
+        sign_priv = input("Signature private key: ")
+        sign_pub  = input("Signature public key : ")
+
+        enc_priv  = input("Encrypt private key : ")
+        enc_pub   = input("Encrypt public key  : ")
+
+        with open(".env", "w", encoding="utf-8") as f:
+            f.write(f"SIGNATURE_PRIVATE_KEY={sign_priv}\n")
+            f.write(f"SIGNATURE_PUBLIC_KEY={sign_pub}\n")
+            f.write(f"ENCRYPT_PRIVATE_KEY={enc_priv}\n")
+            f.write(f"ENCRYPT_PUBLIC_KEY={enc_pub}\n")
+
+        data = {
+            "signature": {
+                "private_key": sign_priv,
+                "public_key": sign_pub
+            },
+            "encryption": {
+                "private_key": enc_priv,
+                "public_key": enc_pub
+            }
+        }
+
+        print("\n[OK] Keys imported and saved to .env")
+        return data
+    
 def get_first_peer(domain, dns_ip):
     resolver = dns.resolver.Resolver()
     resolver.nameservers = [dns_ip]
