@@ -619,6 +619,7 @@ If the original founder or early maintainers step away, the community may appoin
 
 ```text
 No contribution, no allocation.
+```
 
 ---
 
