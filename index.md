@@ -1,8 +1,3 @@
----
-layout: default
-title: Whitepaper
----
-
 # Silkium (INeedANewGuitar) Whitepaper v1.0
 
 **A Decentralized Commerce Protocol**
