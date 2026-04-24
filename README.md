@@ -12,7 +12,7 @@ It combines cryptographic identity, distributed discovery, relay-based communica
 
 The full protocol design is described in:
 
-- [`whitepaper.md`](./whitepaper.md)
+- [`whitepaper.md`](./papers/whitepaper.md)
 
 ---
 
