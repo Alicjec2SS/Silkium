@@ -20,4 +20,4 @@ The full protocol design is described in:
 
 ```text
 Trust no one.
-Trust the rules.
+Trust the rules.```
