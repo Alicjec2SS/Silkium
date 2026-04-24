@@ -9,7 +9,7 @@ permalink: /whitepaper/
 
 **A Decentralized Commerce Protocol**
 
-Author: Evenander Alice (Phan Minh Thiên Hoàng)
+Author: Evenander Alice (Phan Minh Thiên Hoàng) — pseudonyms used for privacy
 Date: 2026-04-24  
 Status: Draft / Active Development
 
