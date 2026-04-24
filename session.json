@@ -1,0 +1,10 @@
+{
+    "signature": {
+        "private_key": "5e6d8fec62a8da907c577a8a281d85452b2f90b11893d9f5e33469b465c642db",
+        "public_key": "3e1bfca112e8c62a00349bd8740e508c1b762dfcca1fab296061be0e8fd61bd4d7989ddd2ca4d9ac7eb7a36c5fbb780b993aef2e283984ae87c34dda57580f00"
+    },
+    "encryption": {
+        "private_key": "a8543d8148978b2c017f373239750d58d7be4503590d28b6dab565252ae00877",
+        "public_key": "24d15e647b632133f9e2d640ac55ec67a910b8889a0d089f02f39cc7e3afb62a"
+    }
+}
