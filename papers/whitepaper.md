@@ -618,7 +618,7 @@ If the original founder or early maintainers step away, the community may appoin
 ### Core Principle
 
 ```text
-No contribution, no allocation.```
+No contribution, no allocation.
 
 ---
 
