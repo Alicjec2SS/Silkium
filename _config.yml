@@ -1,6 +1,8 @@
 title: Silkium
 description: A Decentralized Commerce Protocol
 theme: minima
-exclude:
-  - README.md
-  - whitepaper(personal).md
+
+header_pages:
+  - whitepaper.md
+
+markdown: kramdown
