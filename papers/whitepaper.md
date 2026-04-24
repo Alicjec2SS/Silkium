@@ -594,7 +594,34 @@ The fund must be:
 - easy to audit
 - independent of any single individual
 
+## 16.1 Maintenance Allocation Sunset Rule
+
+To ensure long-term fairness and prevent perpetual founder extraction, the protocol may allocate a temporary maintenance share from Code 3 penalties to active contributors responsible for security, upgrades, infrastructure, and protocol continuity.
+
+### Default Allocation
+
+- 95% → Builder Grant Treasury  
+- 5% → Active Maintainer Pool
+
+### Sunset Condition
+
+If no meaningful maintenance, development, or operational contribution is provided by the maintainer group, the maintenance allocation automatically expires.
+
+In such cases:
+
+- 100% → Builder Grant Treasury
+
+### Governance Replacement
+
+If the original founder or early maintainers step away, the community may appoint new maintainers through transparent governance mechanisms, restoring the Active Maintainer Pool only when active contribution resumes.
+
+### Core Principle
+
+```text
+No contribution, no allocation.```
+
 ---
+
 
 ## 17. Verifier
 
