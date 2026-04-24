@@ -21,7 +21,7 @@ class TransactionBlock:
         self,
         previous_block: "TransactionBlock | None",
         epoch: int,
-        information_hash: str,
+        information_hash: str,#hash(item, quantity, price, sum_price)
         buyer_signed_information_hash: str,
         seller_signed_information_hash: str,
         transaction_code: str,
@@ -51,17 +51,50 @@ class TransactionBlock:
                     "buyer_signature_public_key":str(buyer_signature_public_key),
                     "seller_signature_public_key":str(seller_signature_public_key),
                     "transaction_code":str(transaction_code)
-                },sort_keys=True
+                },sort_keys=True, separators=(',', ':')
             )
         )
 
 class MarketBlock:#Block dùng để lưu trữ các món hàng
-    def __init__(self, previous_block:MarketBlock, seller: str, header: list, body: str):
+    def __init__(self, 
+                 previous_block:"MarketBlock | None",
+                 epoch:int,  
+                 header: list, 
+                 body: str,
+                 seller_signature_public_key: str):
         self.previous_block = previous_block
         self.node_id = previous_block.node_id + 1 if previous_block else 0
+        self.epoch = epoch
         self.header = header # lưu tags
+
+        #header: [<Tên vật phẩm>, <giá tiền một món>, <vùng địa lí>, <các tags hàng khác>]
+
+        #Cụ thể một xíu về cái vùng địa lý, nó sẽ có dạng RR-CCC
+        #ví dụ: GLOBAL
+        #VN
+        #VN-HCM
+        #VN-HN
+        #VN-GL
+        #SEA
+        #EU
+        #US-WEST,....
+
         self.body = body
-        self.seller = seller
+        self.seller_signature_public_key = seller_signature_public_key
+
+        previous_hash = previous_block.hash_code if previous_block else "GENESIS"
+
+        self.hash_code = sha256(
+            json.dumps(
+                {
+                    "previous_hash":previous_hash,
+                    "epoch":epoch,
+                    "seller_signature_public_key":seller_signature_public_key,
+                    "header": header,
+                    "body": body
+                },sort_keys=True, separators=(',', ':')
+            )
+        )
 
 
 
@@ -109,15 +142,15 @@ class DHTboard:
         self.market_board = {}#clear
         current_node = self.market_block
         while current_node:
-            seller = current_node.seller
-            if seller not in self.market_board:
+            seller_signature_public_key = current_node.seller_signature_public_key
+            if seller_signature_public_key not in self.market_board:
                 #Create one
-                self.market_board[seller] = []
+                self.market_board[seller_signature_public_key] = []
             header = current_node.header
             body = current_node.body
             node_id = current_node.node_id
             item = {"header":header, "body": body,"node_id":node_id}
-            self.market_board[seller].append(item)
+            self.market_board[seller_signature_public_key].append(item)
             current_node = current_node.previous_block
 
 
