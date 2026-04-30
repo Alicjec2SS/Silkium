@@ -1,7 +1,11 @@
-from ecdsa import SigningKey, VerifyingKey, SECP256k1, BadSignatureError
-from cryptography.hazmat.primitives.asymmetric import x25519
-import hashlib
+from cryptography.hazmat.primitives.asymmetric import (
+    ed25519,
+    x25519
+)
+from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
+import os
 from cryptography.hazmat.primitives import serialization
+import hashlib
 import json
 import os
 import dns.resolver
@@ -41,17 +45,25 @@ def read_json(file_path):
         return None
 
 
-# =========================
-# SIGNATURE KEYPAIR
-# secp256k1
-# =========================
+
 def generate_signature_keys():
-    sk = SigningKey.generate(curve=SECP256k1)
-    vk = sk.get_verifying_key()
+    private_key = ed25519.Ed25519PrivateKey.generate()
+    public_key = private_key.public_key()
+
+    priv_bytes = private_key.private_bytes(
+        encoding=serialization.Encoding.Raw,
+        format=serialization.PrivateFormat.Raw,
+        encryption_algorithm=serialization.NoEncryption()
+    )
+
+    pub_bytes = public_key.public_bytes(
+        encoding=serialization.Encoding.Raw,
+        format=serialization.PublicFormat.Raw
+    )
 
     return {
-        "private_key": sk.to_string().hex(),
-        "public_key": vk.to_string().hex()
+        "private_key": priv_bytes.hex(),
+        "public_key": pub_bytes.hex()
     }
 
 
@@ -78,7 +90,6 @@ def generate_encryption_keys():
         "private_key": priv_bytes.hex(),
         "public_key": pub_bytes.hex()
     }
-
 
 # =========================
 # GENERATE FULL ACCOUNT
@@ -185,105 +196,85 @@ def get_first_peer(domain, dns_ip):
 def sha256(string: str) -> str:
     return hashlib.sha256(string.encode("utf-8")).hexdigest()
 
-
 def verify_signature(public_key: str, data: str, signature: str) -> bool:
     """
-    Verify chữ ký secp256k1
-    public_key: hex public key
+    Verify chữ ký Ed25519
+    public_key: hex public key (32 bytes)
     data: text gốc
-    signature: hex signature
+    signature: hex signature (64 bytes)
     """
     try:
-        vk = VerifyingKey.from_string(
-            bytes.fromhex(public_key),
-            curve=SECP256k1
+        vk = ed25519.Ed25519PublicKey.from_public_bytes(
+            bytes.fromhex(public_key)
         )
 
         vk.verify(
             bytes.fromhex(signature),
-            data.encode("utf-8"),
-            hashfunc=hashlib.sha256
+            data.encode("utf-8")
         )
+
         return True
 
-    except BadSignatureError:
-        return False
     except Exception:
         return False
 
 
 def sign_data(private_key: str, data: str) -> str:
     """
-    Ký dữ liệu bằng secp256k1
+    Ký dữ liệu bằng Ed25519
     return hex signature
     """
-    sk = SigningKey.from_string(
-        bytes.fromhex(private_key),
-        curve=SECP256k1
+    sk = ed25519.Ed25519PrivateKey.from_private_bytes(
+        bytes.fromhex(private_key)
     )
 
     signature = sk.sign(
-        data.encode("utf-8"),
-        hashfunc=hashlib.sha256
+        data.encode("utf-8")
     )
 
     return signature.hex()
 
 
-def encypt_data(public_key: str, data: str) -> str:
-    """
-    Mã hóa kiểu shared secret X25519
-    Trả về: eph_public_hex:encrypted_hex
-    """
-    receiver_pub = x25519.X25519PublicKey.from_public_bytes(
-        bytes.fromhex(public_key)
-    )
+def encrypt_data(public_key: str, data: str) -> str:
+    receiver_pub = x25519.X25519PublicKey.from_public_bytes(bytes.fromhex(public_key))
 
-    # ephemeral key
     eph_private = x25519.X25519PrivateKey.generate()
     eph_public = eph_private.public_key()
 
-    # shared secret
     secret = eph_private.exchange(receiver_pub)
 
-    # tạo key stream
     key = hashlib.sha256(secret).digest()
 
-    raw = data.encode("utf-8")
+    nonce = os.urandom(12)
 
-    encrypted = bytes(
-        raw[i] ^ key[i % len(key)]
-        for i in range(len(raw))
-    )
+    cipher = ChaCha20Poly1305(key)
 
-    eph_pub_hex = eph_public.public_bytes_raw().hex()
+    encrypted = cipher.encrypt(nonce, data.encode(), None)
 
-    return eph_pub_hex + ":" + encrypted.hex()
+    eph_pub_hex = eph_public.public_bytes(
+        encoding=serialization.Encoding.Raw,
+        format=serialization.PublicFormat.Raw
+    ).hex()
 
+    return eph_pub_hex + ":" + nonce.hex() + ":" + encrypted.hex()
 
 def decrypt_data(private_key: str, data: str) -> str:
-    """
-    Giải mã dữ liệu từ format eph_pub:encrypted
-    """
-    eph_pub_hex, encrypted_hex = data.split(":")
+    eph_pub_hex, nonce_hex, encrypted_hex = data.split(":")
 
-    my_private = x25519.X25519PrivateKey.from_private_bytes(
-        bytes.fromhex(private_key)
-    )
+    my_private = x25519.X25519PrivateKey.from_private_bytes(bytes.fromhex(private_key))
 
-    sender_pub = x25519.X25519PublicKey.from_public_bytes(
-        bytes.fromhex(eph_pub_hex)
-    )
+    sender_pub = x25519.X25519PublicKey.from_public_bytes(bytes.fromhex(eph_pub_hex))
 
     secret = my_private.exchange(sender_pub)
 
     key = hashlib.sha256(secret).digest()
 
-    encrypted = bytes.fromhex(encrypted_hex)
+    cipher = ChaCha20Poly1305(key)
 
-    decrypted = bytes(
-        encrypted[i] ^ key[i % len(key)]
-        for i in range(len(encrypted))
+    decrypted = cipher.decrypt(
+        bytes.fromhex(nonce_hex),
+        bytes.fromhex(encrypted_hex),
+        None
     )
 
-    return decrypted.decode("utf-8")
+    return decrypted.decode()
