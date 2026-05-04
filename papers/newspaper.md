@@ -63,7 +63,7 @@ PLE : Public key dùng cho việc mã hóa
 
 Đó sẽ là công cụ để ta triển khai kĩ lưỡng ý tưởng của Silkium. Chúng thực hiện nhiệm vụ bảo đảm tính toàn vẹn và tính xác minh mà không tiết lộ thông tin nhạy cảm của người dùng(ví dụ như địa chỉ IP, các thông tin cá nhân khác, etc.)
 
-Tiếp túc gọi:
+Tiếp tục gọi:
 ```text
 TX : nội dung của một lần mua hàng dưới dạng một block trong blockchain
 TX_raw: thông tin được trao đổi giữa người mua và bán(có thể hiểu như nội dung đơn hàng)
@@ -125,6 +125,16 @@ Ta cần phải làm rõ:
     + Giá trị stake của người bán không cố định mà phụ thuộc vào độ uy tín (weight W) của người bán trong hệ thống. Người bán có độ uy tín cao sẽ yêu cầu mức stake thấp hơn, trong khi người bán mới hoặc có độ uy tín thấp sẽ phải stake nhiều hơn.
     + Vì loại tiền tệ được quy định để sử dụng là Ethereum, hệ thống sử dụng Smart Contract để giám sát việc chuyển tiền của cả hai bên vào ví escrow (Money Pool). Khi đã xác nhận được tiền đã được chuyển đầy đủ, giao dịch sẽ chuyển sang bước tiếp theo.
     + Trong trường hợp quá thời gian 2 ngày kể từ khi một bên chuyển tiền mà bên còn lại không hoàn tất nghĩa vụ của mình, giao dịch sẽ bị hủy và số tiền đã gửi sẽ được hoàn trả lại cho bên đã thực hiện chuyển tiền.
+
+Định nghĩa:
+```text
+STATE 1: Deal được hoàn thành
+STATE 2: Deal không được hoàn thành(được 2 bên đồng thuận) -> Xét state này vào trường hợp hoàn hàng
+STATE 3: Deal bị đơn phương chấm dứt(không hoàn thành hoặc không đồng thuận)
+```
+
+- Sau khi deal được xác nhận(toàn bộ tiền được chuyển vào ví escrow):
+
 
 
 
